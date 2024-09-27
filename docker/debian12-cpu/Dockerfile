@@ -28,7 +28,7 @@ ENV LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LIBRARY_PATH
 
 RUN ldconfig
 
-RUN git clone --depth 1 https://github.com/andrikaro/kaldi.git /opt/kaldi #EOL
+RUN git clone --depth 1 --branch aarch64-compatible https://github.com/andrikaro/kaldi.git /opt/kaldi #EOL
 RUN    cd /opt/kaldi/tools && \
        ./extras/install_openblas.sh  && \
        make -j $(nproc) && \
