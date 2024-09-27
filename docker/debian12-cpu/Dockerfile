@@ -1,4 +1,4 @@
-FROM debian:12
+FROM debian:12 as builder
 LABEL maintainer="jtrmal@apptek.com"
 
 RUN apt-get update && \
@@ -15,7 +15,7 @@ RUN apt-get update && \
         libtool \
         git \
         python3 \
-	python3-dev \
+	    python3-dev \
         zlib1g-dev \
         ca-certificates \
         patch \
@@ -38,5 +38,23 @@ RUN    cd /opt/kaldi/tools && \
        make -j $(nproc) && \ 
        ldconfig
 
+FROM debian:12
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    sox \
+    libtool \
+    zlib1g \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/kaldi /opt/kaldi
+
+# Set environment variables
+ENV LD_LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LD_LIBRARY_PATH
+ENV CPLUS_INCLUDE_PATH=/opt/kaldi/tools/openfst/include:$CPLUS_INCLUDE_PATH
+ENV LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LIBRARY_PATH
+
+RUN ldconfig
 
 WORKDIR /opt/kaldi/
