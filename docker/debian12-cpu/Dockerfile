@@ -34,7 +34,6 @@ RUN git clone --depth 1 --branch aarch64-compatible https://github.com/andrikaro
     ./configure --shared --mathlib=OPENBLAS && \
     make depend -j $(nproc) && \
     make -j $(nproc) && \ 
-    ldconfig && \
-    rm -rf /opt/kaldi/tools/openfst/src /opt/kaldi/src
+    ldconfig
 
 WORKDIR /opt/kaldi/
