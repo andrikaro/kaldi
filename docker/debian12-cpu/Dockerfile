@@ -28,15 +28,16 @@ ENV LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LIBRARY_PATH
 
 RUN ldconfig
 
-RUN git clone --depth 1 --branch aarch64-compatible https://github.com/andrikaro/kaldi.git /opt/kaldi #EOL
-RUN    cd /opt/kaldi/tools && \
-       ./extras/install_openblas.sh  && \
-       make -j $(nproc) && \
-       cd /opt/kaldi/src && \
-       ./configure --shared --mathlib=OPENBLAS && \
-       make depend -j $(nproc) && \
-       make -j $(nproc) && \ 
-       ldconfig
+RUN git clone --depth 1 --branch aarch64-compatible https://github.com/andrikaro/kaldi.git /opt/kaldi && \
+    cd /opt/kaldi/tools && \
+    ./extras/install_openblas.sh  && \
+    make -j $(nproc) && \
+    cd /opt/kaldi/src && \
+    ./configure --shared --mathlib=OPENBLAS && \
+    make depend -j $(nproc) && \
+    make -j $(nproc) && \ 
+    ldconfig && \
+    rm -rf /opt/kaldi/tools/openfst/src /opt/kaldi/src
 
 FROM debian:12
 
