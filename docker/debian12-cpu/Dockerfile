@@ -1,4 +1,4 @@
-FROM debian:12 as builder
+FROM debian:12
 LABEL maintainer="jtrmal@apptek.com"
 
 RUN apt-get update && \
@@ -26,8 +26,6 @@ ENV LD_LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LD_LIBRARY_PATH
 ENV CPLUS_INCLUDE_PATH=/opt/kaldi/tools/openfst/include:$CPLUS_INCLUDE_PATH
 ENV LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LIBRARY_PATH
 
-RUN ldconfig
-
 RUN git clone --depth 1 --branch aarch64-compatible https://github.com/andrikaro/kaldi.git /opt/kaldi && \
     cd /opt/kaldi/tools && \
     ./extras/install_openblas.sh  && \
@@ -38,24 +36,5 @@ RUN git clone --depth 1 --branch aarch64-compatible https://github.com/andrikaro
     make -j $(nproc) && \ 
     ldconfig && \
     rm -rf /opt/kaldi/tools/openfst/src /opt/kaldi/src
-
-FROM debian:12
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    sox \
-    libtool \
-    zlib1g \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /opt/kaldi /opt/kaldi
-
-# Set environment variables
-ENV LD_LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LD_LIBRARY_PATH
-ENV CPLUS_INCLUDE_PATH=/opt/kaldi/tools/openfst/include:$CPLUS_INCLUDE_PATH
-ENV LIBRARY_PATH=/opt/kaldi/tools/openfst/lib:$LIBRARY_PATH
-
-RUN ldconfig
 
 WORKDIR /opt/kaldi/
