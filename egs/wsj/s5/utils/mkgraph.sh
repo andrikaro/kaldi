@@ -20,22 +20,6 @@ loopscale=0.1
 
 remove_oov=false
 
-# Function to validate FST files
-validate_fst() {
-    local fst_file=$1
-    if [ ! -f "$fst_file" ]; then
-        echo "Error: FST file $fst_file not found."
-        exit 1
-    fi
-
-    if ! fstinfo "$fst_file" > /dev/null; then
-        echo "Error: FST file $fst_file is corrupt or has an invalid format."
-        exit 1
-    fi
-
-    echo "FST file $fst_file is valid."
-}
-
 for x in `seq 4`; do
   [ "$1" == "--mono" -o "$1" == "--left-biphone" -o "$1" == "--quinphone" ] && shift && \
     echo "WARNING: the --mono, --left-biphone and --quinphone options are now deprecated and ignored."
@@ -126,7 +110,7 @@ ilabels=$lang/tmp/ilabels_${N}_${P}
 ilabels_tmp=$ilabels.$$
 trap "rm -f $clg_tmp $ilabels_tmp" EXIT HUP INT PIPE TERM
 if [[ ! -s $clg || $clg -ot $lang/tmp/LG.fst \
-|| ! -s $ilabels || $ilabels -ot $lang/tmp/LG.fst ]]; then
+    || ! -s $ilabels || $ilabels -ot $lang/tmp/LG.fst ]]; then
   fstcomposecontext $nonterm_opt --context-size=$N --central-position=$P \
    --read-disambig-syms=$lang/phones/disambig.int \
    --write-disambig-syms=$lang/tmp/disambig_ilabels_${N}_${P}.int \
@@ -146,9 +130,6 @@ if [[ ! -s $dir/Ha.fst || $dir/Ha.fst -ot $model  \
   mv $dir/Ha.fst.$$ $dir/Ha.fst
 fi
 
-validate_fst "$dir/Ha.fst" 
-validate_fst "$clg" 
-
 trap "rm -f $dir/HCLGa.fst.$$" EXIT HUP INT PIPE TERM
 if [[ ! -s $dir/HCLGa.fst || $dir/HCLGa.fst -ot $dir/Ha.fst || \
       $dir/HCLGa.fst -ot $clg ]]; then
@@ -157,11 +138,8 @@ if [[ ! -s $dir/HCLGa.fst || $dir/HCLGa.fst -ot $dir/Ha.fst || \
       echo "$0: --remove-oov option: no file $lang/oov.int" && exit 1;
     clg="fstrmsymbols --remove-arcs=true --apply-to-output=true $lang/oov.int $clg|"
   fi
-  fsttablecompose $dir/Ha.fst "$clg" > $dir/tablecomposed.fst;
-  validate_fst "$dir/tablecomposed.fst";
-  cat "$dir/tablecomposed.fst" | fstdeterminizestar --use-log=true  > $dir/determinized_HCLGa.fst;
-  validate_fst "$dir/determinized_HCLGa.fst" 
-  cat $dir/determinized_HCLGa.fst | fstrmsymbols $dir/disambig_tid.int | fstrmepslocal | \
+  fsttablecompose $dir/Ha.fst "$clg" | fstdeterminizestar --use-log=true \
+    | fstrmsymbols $dir/disambig_tid.int | fstrmepslocal | \
      fstminimizeencoded > $dir/HCLGa.fst.$$ || exit 1;
   mv $dir/HCLGa.fst.$$ $dir/HCLGa.fst
   fstisstochastic $dir/HCLGa.fst || echo "HCLGa is not stochastic"
@@ -206,6 +184,3 @@ cp $lang/phones/silence.csl $dir/phones/ || exit 1;
 cp $lang/phones.txt $dir/ 2> /dev/null # ignore the error if it's not there.
 
 am-info --print-args=false $model | grep pdfs | awk '{print $NF}' > $dir/num_pdfs
-
-rm $dir/tablecomposed.fst
-rm $dir/determinized_HCLGa.fst
