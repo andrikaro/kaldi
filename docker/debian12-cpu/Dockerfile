@@ -1,4 +1,4 @@
-FROM debian:12
+FROM arm64v8/debian:12
 LABEL maintainer="jtrmal@apptek.com"
 
 RUN apt-get update && \
@@ -22,13 +22,13 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
-RUN git clone --depth 1 https://github.com/kaldi-asr/kaldi.git /opt/kaldi #EOL
+RUN git clone --depth 1 --branch osx-arm64 https://github.com/andrikaro/kaldi.git /opt/kaldi #EOL
 RUN    cd /opt/kaldi/tools && \
        ./extras/install_openblas.sh  && \
-       make -j 5 && \
+       make -j 10 && \
        cd /opt/kaldi/src && \
        ./configure --shared --mathlib=OPENBLAS && \
        make depend -j $(nproc) && \
-       make -j 5 
+       make -j 10 
 
 WORKDIR /opt/kaldi/
